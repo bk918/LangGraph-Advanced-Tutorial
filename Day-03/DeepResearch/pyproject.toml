@@ -1,0 +1,63 @@
+[project]
+name = "class_deep_research"
+version = "0.0.1"
+description = "Planning, research, and report generation."
+authors = []
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "langchain>=1.0.0",
+    "langgraph>=1.0.0",
+    "langchain-openai>=1.0.0",
+    "langchain-mcp-adapters>=0.1.11",
+    "tavily-python>=0.7.12",
+    "pydantic>=2.11.9",
+    "langsmith>=0.4.30",
+    "langgraph-sdk>=0.2.9",
+    "mcp>=1.14.1",
+    "typing-extensions>=4.15.0",
+    "pyjwt>=2.10.1",
+    "python-multipart>=0.0.20",
+    "langgraph-cli[inmem]>=0.4.5",
+    "aiohttp>=3.12.15",
+]
+
+[project.optional-dependencies]
+dev = ["mypy>=1.18.2", "ruff>=0.13.1"]
+
+[build-system]
+requires = ["setuptools>=73.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include = ["src/**/*.py"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.ruff]
+lint.select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "D",    # pydocstyle
+    "D401", # First line should be in imperative mood
+    "T201",
+    "UP",
+]
+lint.ignore = [
+    "UP006",
+    "UP007",
+    "UP035",
+    "D417",
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "UP"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
