@@ -28,15 +28,6 @@
 - Resource: 읽기 전용, Side Effect 없음
 - Tool: 상태 변경 가능, 계산 수행
 
-## 실행 방법
-```bash
-# 서버 시작
-python 03_context_optimization_with_mcp.py
-
-# 테스트 모드
-python 03_context_optimization_with_mcp.py --test
-```
-
 ## 참고 문서
 - MCP Specification 2025-06-18: https://modelcontextprotocol.io/specification/2025-06-18
 - Progress Tokens: https://modelcontextprotocol.io/specification/2025-06-18/basic/utilities/progress

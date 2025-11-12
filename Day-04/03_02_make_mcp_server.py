@@ -1,5 +1,5 @@
 """
-02_make_mcp_server.py - 기본 MCP 서버 구현
+기본 MCP 서버 구현
 
 ## 학습 목표
 - MCP 서버의 핵심 개념 3가지 이해: Tool, Resource, Prompt
@@ -27,20 +27,6 @@
 - 변수를 포함한 구조화된 프롬프트
 - LLM이 선택하여 사용 가능
 - 예: 코드 리뷰, 문서 작성, 분석 템플릿
-
-## 실행 방법
-```bash
-# 서버 시작 (stdio 모드)
-python 02_make_mcp_server.py
-
-# 또는 직접 테스트
-python 02_make_mcp_server.py --test
-```
-
-## 필요한 패키지
-```bash
-pip install mcp pydantic python-dotenv
-```
 
 ## 참고 문서
 - MCP 공식 문서: https://modelcontextprotocol.io/

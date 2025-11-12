@@ -30,7 +30,7 @@ import asyncio
 import logging
 
 from langchain.agents import create_agent
-from langchain_mcp_adapters.clients import MultiServerMCPClient
+from langchain_mcp_adapters.client import MultiServerMCPClient
 from openrouter_llm import create_openrouter_llm
 
 # 로깅 설정

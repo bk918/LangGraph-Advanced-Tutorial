@@ -30,8 +30,11 @@ logger = logging.getLogger(__name__)
 
 mcp = FastMCP(
     name="ProductionMCPServer",
-    version="1.0.0",
-    description="MCP 서버 보일러플레이트",
+    instructions="MCP 서버 보일러플레이트",
+    host="0.0.0.0",
+    port=8000,
+    json_response=True,
+    stateless_http=True,
 )
 
 
