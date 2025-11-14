@@ -1,0 +1,15 @@
+<<Today Project>>
+DeepResearch 코드를 모두 파악하셨습니다. 👍
+
+이 코드를 DeepAgent(Day-03) 또는 https://github.com/langchain-ai/deepagents
+코드를 참고하셔서 "DeepAgent" 로 바꾼다면 어떻게 하실 수 있을지
+
+1. 설계 - 설계도 
+2. 구현 방안(기획-계획)
+
+을 작성해주시면 됩니다.
+(LangChain-LangGraph 에 익숙하지 않으신 경우, 개념만 사용하셔도 됩니다.)
+
+<<이 과제의 목적>>
+아래 설계 과정을 고민하고, 이해하시는 것입니다. (에이전트 시스템 효율화 측면)
+Workflow(또는 Multi Agent Pattern) -> Dynamic Allocation TO 'Single' Agent
