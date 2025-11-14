@@ -84,9 +84,10 @@ class AgentState(MessagesState):
 
 class SupervisorState(TypedDict):
     """연구 작업을 관리하는 감독자를 위한 상태."""
-
+    # Required
     supervisor_messages: Annotated[list[MessageLikeRepresentation], override_reducer]
     research_brief: str
+    # Internal 
     notes: Annotated[list[str], override_reducer] = []
     research_iterations: int = 0
     raw_notes: Annotated[list[str], override_reducer] = []

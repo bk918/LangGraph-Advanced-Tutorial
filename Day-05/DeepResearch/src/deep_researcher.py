@@ -59,8 +59,9 @@ llm_model = init_chat_model(
 
 
 async def clarify_with_user(
-    state: AgentState, config: RunnableConfig
-) -> Command:
+    state: AgentState, 
+    config: RunnableConfig
+) -> Command[Literal["write_research_brief", END]]:
     """연구 범위가 불명확한 경우 사용자 메시지를 분석하고 명확화 질문을 합니다.
 
     이 함수는 연구를 진행하기 전에 사용자의 요청에 명확화가 필요한지 판단합니다.
@@ -89,7 +90,8 @@ async def clarify_with_user(
 
     # 구조화된 출력과 재시도 로직으로 모델 구성
     clarification_model = (
-        llm_model.with_structured_output(ClarifyWithUser)
+        llm_model
+        .with_structured_output(ClarifyWithUser)
         .with_retry(stop_after_attempt=configurable.max_structured_output_retries)
         .with_config(model_config)
     )
@@ -113,7 +115,8 @@ async def clarify_with_user(
 
 
 async def write_research_brief(
-    state: AgentState, config: RunnableConfig
+    state: AgentState, 
+    config: RunnableConfig
 ) -> Command[Literal["research_supervisor"]]:
     """사용자 메시지를 구조화된 연구 계획서로 변환하고 총괄 관리자를 초기화합니다.
 
@@ -155,6 +158,7 @@ async def write_research_brief(
         max_researcher_iterations=configurable.max_researcher_iterations,
     )
 
+
     return Command(
         goto="research_supervisor",
         update={
@@ -171,8 +175,9 @@ async def write_research_brief(
 
 
 async def supervisor(
-    state: SupervisorState, config: RunnableConfig
-) -> Command:
+    state: SupervisorState, 
+    config: RunnableConfig
+) -> dict:
     """연구 전략을 계획하고 연구자들에게 위임하는 연구 총괄 관리자입니다.
 
     총괄 관리자는 연구 계획서를 분석하고 연구를 관리 가능한 작업들로 나누는 방법을 결정합니다.
@@ -209,18 +214,17 @@ async def supervisor(
     response = await research_model.ainvoke(supervisor_messages)
 
     # Step 3: Update state and proceed to tool execution
-    return Command(
-        goto="supervisor_tools",
-        update={
-            "supervisor_messages": [response],
-            "research_iterations": state.get("research_iterations", 0) + 1,
-        },
-    )
+    # TODO: add_edge() 활용해서 바꿔주세요.
+    return {
+        "supervisor_messages": [response],
+        "research_iterations": state.get("research_iterations", 0) + 1,
+    }
 
 
 async def supervisor_tools(
-    state: SupervisorState, config: RunnableConfig
-) -> Command[Literal["supervisor", "__end__"]]:
+    state: SupervisorState, 
+    config: RunnableConfig
+) -> Command[Literal["supervisor", END]]:
     """연구 위임과 전략적 사고를 포함하여 총괄 관리자가 호출한 도구를 실행합니다.
 
     이 함수는 세 가지 유형의 총괄 관리자 도구 호출을 처리합니다:
@@ -241,7 +245,7 @@ async def supervisor_tools(
     research_iterations = state.get("research_iterations", 0)
     most_recent_message = supervisor_messages[-1]
 
-    # 연구 단계의 종료 기준 정의
+    # [비즈니스 로직] 연구 단계의 종료 기준 정의
     exceeded_allowed_iterations = research_iterations > configurable.max_researcher_iterations
     no_tool_calls = not most_recent_message.tool_calls
     research_complete_tool_call = any(
@@ -272,6 +276,7 @@ async def supervisor_tools(
     update_payload = {"supervisor_messages": []}
 
     # think_tool 호출 처리 (전략적 반성)
+    # NOTE: 이거 굳이 왜 해야되죠? 그냥 think_tools 에서 처리할 수 있을 것 같은데....
     think_tool_calls = [
         tool_call
         for tool_call in most_recent_message.tool_calls
@@ -280,6 +285,7 @@ async def supervisor_tools(
 
     for tool_call in think_tool_calls:
         reflection_content = tool_call["args"]["reflection"]
+
         all_tool_messages.append(
             ToolMessage(
                 content=f"Reflection recorded: {reflection_content}",
@@ -376,7 +382,7 @@ async def supervisor_tools(
 
 # Supervisor 서브그래프 생성
 # 연구 위임과 조정을 관리하는 총괄 관리자 워크플로우 생성
-supervisor_builder = StateGraph(SupervisorState, config_schema=Configuration)
+supervisor_builder = StateGraph(state_schema=SupervisorState, context_schema=Configuration)
 
 # Add supervisor nodes for research management
 supervisor_builder.add_node("supervisor", supervisor)  # Main supervisor logic
@@ -384,6 +390,7 @@ supervisor_builder.add_node("supervisor_tools", supervisor_tools)  # Tool execut
 
 # Define supervisor workflow edges
 supervisor_builder.add_edge(START, "supervisor")  # Entry point to supervisor
+supervisor_builder.add_edge("supervisor", "supervisor_tools") # Command -> Edge 로 변경
 
 # 메인 워크플로우에서 사용하기 위한 총괄 관리자 서브그래프 컴파일
 supervisor_subgraph = supervisor_builder.compile()
@@ -613,7 +620,9 @@ async def compress_research(state: ResearcherState, config: RunnableConfig):
 # Researcher 서브그래프 생성
 # 특정 주제에 대한 집중된 연구를 수행하는 개별 연구자 워크플로우 생성
 researcher_builder = StateGraph(
-    ResearcherState, output=ResearcherOutputState, config_schema=Configuration
+    state_schema=ResearcherState, 
+    output_schema=ResearcherOutputState, 
+    context_schema=Configuration,
 )
 
 # Add researcher nodes for research execution and compression
@@ -737,7 +746,11 @@ async def final_report_generation(state: AgentState, config: RunnableConfig):
 
 # 메인 Deep Researcher 그래프 생성
 # 사용자 입력부터 최종 보고서까지 완전한 심층 연구 워크플로우 생성
-deep_researcher_builder = StateGraph(AgentState, input=AgentInputState, config_schema=Configuration)
+deep_researcher_builder = StateGraph(
+    state_schema=AgentState, 
+    input_schema=AgentInputState, 
+    context_schema=Configuration,
+)
 
 # Add main workflow nodes for the complete research process
 deep_researcher_builder.add_node("clarify_with_user", clarify_with_user)  # User clarification phase
@@ -745,6 +758,7 @@ deep_researcher_builder.add_node(
     "write_research_brief",
     write_research_brief,
 )  # Research planning phase
+
 deep_researcher_builder.add_node(
     "research_supervisor",
     supervisor_subgraph,
