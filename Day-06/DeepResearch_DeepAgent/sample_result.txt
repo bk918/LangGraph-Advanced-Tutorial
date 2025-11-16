@@ -1,0 +1,137 @@
+================================================================================
+실행 결과
+================================================================================
+
+연구 질문: LangChain 및 LangGraph가 V1.0이 되면서 변경된 사항에 대해 꼼꼼하게 조사해줘.
+실행 시간: 299.28초
+총 실행 단계: 84
+현재 단계: COMPLETE
+생성된 파일 수: 15
+보고서 길이: 5,372 문자
+
+================================================================================
+생성된 파일 목록
+================================================================================
+  - /notes/langchain-langgraph-v1-feedback.md
+  - /notes/langchain-langgraph-v1-migration.md
+  - /notes/langchain-v1-architecture.md
+  - /notes/langchain-v1-changes.md
+  - /notes/langgraph-v1-changelog-migration.md
+  - /output/compressed_research.md
+  - /output/final_report.md
+  - /output/notes/langchain-langgraph-v1-feedback.md
+  - /output/notes/langchain-langgraph-v1-migration.md
+  - /output/notes/langchain-v1-architecture.md
+  - /output/notes/langchain-v1-changes.md
+  - /output/notes/langgraph-v1-changelog-migration.md
+  - /output/research_brief.md
+  - /status/context_mode.txt
+  - /status/current_stage.txt
+
+================================================================================
+전체 보고서
+================================================================================
+
+# LangChain 및 LangGraph V1.0 변경점 심층 보고서
+
+## 목차
+- 개요 및 연구 진행 과정
+- 주요 변경점 및 신규 아키텍처(요약/코드 예시 포함)
+- Breaking changes 및 Migration 전략
+- LangGraph V1.0 주요 업데이트/활용성
+- 공식 문서 및 마이그레이션 가이드/비교표
+- 커뮤니티·실사용자 반응/이슈
+- 결론 및 요약
+- 출처
+
+## 개요 및 연구 진행 과정
+본 보고서는 LangChain 및 LangGraph V1.0의 변화와 업그레이드 사항, migration 경로, 실사용후기 및 커뮤니티 반응을 공식 changelog, 릴리즈 노트, migration guide 및 실전 코드/피드백에 기반해 체계적으로 분석하였습니다. Python/JS 개발 경험자를 위해 실제 migration 예시, 이슈, 체크리스트도 포함합니다.
+
+## 1. 주요 변경점/신규 아키텍처
+- **핵심 Agent 루프 및 create_agent API 도입**
+  - 다양한 모델 프로바이더에 상관없이 빠른 에이전트 개발을 위해 `create_agent` API가 중심이 됨. 이는 LangGraph 런타임 기반으로, 신속 프로토타이핑~production까지 일관성 있는 개발 지원.
+  - 기존 prebuilt agent 및 create_react_agent 함수는 deprecated(더 이상 사용하지 않음), 일원화
+  - 예시:  
+    - **V0.x**
+      ```python
+      from langchain.agents import create_react_agent
+      agent = create_react_agent(model, tools, system_prompt="You are...")
+      ```
+    - **V1.0**
+      ```python
+      from langchain.agents import create_agent
+      agent = create_agent(model, tools, system_prompt="You are...")
+      ```
+  - [Migration Guide][2.1], [What's New][2.2]
+
+- **LangGraph 통합/강화**
+  - create_agent가 LangGraph 상에 구축됨. persistence, streaming, time travel, branching 등 production-ready한 기능이 내장됨
+  - Graph 기반 워크플로우 관리와 상태(stateful) 분기 가능
+  - human-in-the-loop와 같은 실제 운영 기능을 내장으로 지원
+  - [LangGraph Changelog][3.1]
+
+- **Middleware(미들웨어) & Hook 시스템**
+  - 기존 pre/post model hook 구조가 middleware로 통합. 스텝별 커스텀 처리 유연화
+  - 정책 삽입, 커스터마이징 등 유연한 조작 가능
+  - [What's New][2.2]
+
+- **Content Block 표준화/도입**
+  - 여러 LLM 제공자에 상관없이 통일된 output(content block) 포맷으로 처리
+  - message/도구 호출/이미지 등 multimodal 지원
+
+- **패키지 구조 분리(lean core vs classic)**
+  - core는 에이전트/도구/모델 등에 집중, legacy 기능(`chains`, `retrievers` 등)은 langchain-classic(별도 패키지)으로 이동
+  - [What's New][2.2]
+
+- **환경 요건**
+  - Python 3.10+, Node.js 20+ 필요(이하 버전 미지원)
+  - CI/환경 체크 권장
+
+## 2. Breaking Changes 및 Migration 전략
+- `create_react_agent` 등 구 방식은 일괄 deprecated, 신규 프로젝트에선 create_agent만 지원
+- pre/post model hooks → middleware 기반 정책 삽입으로 단순화
+- legacy 코드, API/class/모듈 구조는 langchain-classic 패키지로 분리, 신규 API와 혼용 가능
+- 공식 migration guide에서 단계별 코드 변환, import 경로, 파라미터 변화 등 상세 안내(표/코드 예시 다수)
+- migration시 classic 패키지/legacy 경로 활용 가능(기존 코드 급전환 불필요, 점진적 이전)
+- 환경 제약 CI/빌드에서 반드시 체크 권장
+
+## 3. LangGraph V1.0 주요 업데이트/활용성
+- 최초로 production-ready agent 프레임워크 제공(checkpoint, persistence, branching, streaming, human-in-the-loop 등 내장)
+- 강한 상태관리(stateful), branch별 워크플로우 분기/합류, 커스텀 hook/middleware 통합 편의성 향상
+- 예시: V0.x(create_react_agent 등)에서 V1.x(create_agent 기반)로 구조/코드가 변경됨(본문 코드 참고)
+- [LangGraph Changelog][3.1], [Migration Guide][3.2]
+
+## 4. 공식 문서, 마이그레이션 가이드, 비교표 등
+- Python/JS/TS migration guide, release note, changelog, 코드 예시와 비교표
+- [LangChain 1.0 Announcement][2.1]
+- [Migration Guide (python)][2.2], [Migration Guide (js/ts)][2.3], [Release Note][2.4], [LangGraph Changelog][3.1]
+- 각 공식 문서 내 “before→after” 코드, 단계별 전환 팁 포함
+
+| 체크리스트/주의         | 설명                                                 | 참고                                                         |
+|--------------------|----------------------------------------------------|------------------------------------------------------------|
+| Python 3.10+, Node.js 20+ | 필수 환경                                              | [2.2], [2.3]                                               |
+| 패키지 구조 변경        | core와 classic 분리, legacy는 classic에서 보존            | 위 가이드 참조                                               |
+| create_agent 표준화     | 신규 agent 생성방식 단일화                               | 위 가이드 참조                                               |
+| 미들웨어 적극 활용      | 정책 삽입, 스텝별 분기, 커스텀 처리 등                     | [2.2]                                                       |
+| migration guide 따라 변환 | 단계별 migration 공식 표/코드로 안내                      | 위 가이드 참조                                               |
+
+## 5. 커뮤니티·실사용자 반응/이슈
+- create_agent가 단순해짐, 진입장벽/복잡도 ↓ 라는 긍정적 평(Reddit 등)
+- LangGraph 도입 후 실전 워크플로우(특히 stateful, branching, checkpoint 등)에 대한 활용·만족도 높음
+- 반면, 신규-legacy API 혼용 및 문서화/튜토리얼(특히 LangChain Academy)의 업데이트 지연, 실제 코드-문서 차이 등 학습 곡선·운영상 이슈도 노출
+- production 실전 도입시 bug, breaking 이슈 사례 반복 보고됨
+
+## 결론 및 요약
+LangChain 및 LangGraph V1.0은 불명확하고 복잡하던 기존 에이전트 및 워크플로우 구조를 표준화, 프로덕션 내부 기능 내장, 개발·운영 단순화에 중점을 둔 변화가 핵심입니다. 그러나 신규-legacy API 혼용, 문서화 지연, 의존성 증가 등은 여전히 단기 장벽입니다. migration 가이드/코드/체크리스트를 반드시 참고해야 하며, 대규모 실전 적용 전 충분한 검증과 테스트가 권장됩니다.
+
+## 출처 (Sources)
+1. Reddit 후기: https://www.reddit.com/r/LangChain/comments/1ow5a90/langchain_10_langgraph_10_whats_actually_new_for/
+2. LangChain Migration Guide (python): https://docs.langchain.com/oss/python/migrate/langchain-v1
+3. LangChain 1.0 Announcement: https://changelog.langchain.com/announcements/langchain-1-0-now-generally-available
+4. LangChain 1.0 What's New (python): https://docs.langchain.com/oss/python/releases/langchain-v1
+5. LangGraph Changelog v1.0: https://changelog.langchain.com/announcements/langgraph-1-0-is-now-generally-available
+6. LangChain Migration Guide (js/ts): https://docs.langchain.com/oss/javascript/migrate/langchain-v1
+7. ClickITTech LangChain vs LangGraph 비교: https://www.clickittech.com/ai/langchain-1-0-vs-langgraph-1-0/
+8. LangGraph Migration Guide (python): https://docs.langchain.com/oss/python/migrate/langgraph-v1
+9. GitHub Issue/피드백: https://github.com/langchain-ai/langgraphjs/issues/1602
+10. LangChain 공식 블로그: https://blog.langchain.com/langchain-langgraph-1dot0/
